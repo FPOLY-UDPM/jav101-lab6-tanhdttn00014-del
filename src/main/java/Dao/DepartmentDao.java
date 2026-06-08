@@ -1,8 +1,11 @@
 package Dao;
 
+import entity.Department;
 import util.JdbcV1;
 
 import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DepartmentDao {
     private String stmSELECT = "SELECT [Id], [Name], [Description] FROM [dbo].[Departments]";
@@ -28,4 +31,26 @@ public class DepartmentDao {
         }
     }
 
+    public List<Department> findAll() {
+        List<Department> list = new ArrayList<>();
+        try {
+            // Gọi hàm truy vấn
+            ResultSet resultSet = JdbcV1.executeQuery(stmSELECT);
+//            ResultSet resultSet = JdbcV2.executeQuery(stmSELECT);
+//            ResultSet resultSet = JdbcV3.executeQuery(callSELECT);
+            while (resultSet.next()) {
+                Department dept = new Department();
+                dept.setId(resultSet.getString("Id"));
+                dept.setName(resultSet.getString("Name"));
+                dept.setDescription(resultSet.getString("Description"));
+
+                list.add(dept); // Nạp vào mảng tổng
+            }
+            // Lưu ý: Nhớ đóng kết nối sau khi duyệt xong để tránh rò rỉ tài nguyên
+            resultSet.getStatement().getConnection().close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list; // Trả mảng về cho Servlet sử dụng
+    }
 }
