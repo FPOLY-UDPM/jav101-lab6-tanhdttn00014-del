@@ -31,18 +31,17 @@ public class DepartmentDAO {
 
     //JDBC V3
     // Câu lệnh call stored procedure
-    private String callSELECT = "exec spSelectAll";
-    private String callSELECT_byId = "exec spSelectById(?)";
-    // Bổ sung thêm : callSELECT_byName ??
-    private String callINSERT = "exec spInsert(?,?,?)";
-    private String callUPDATE = "exec spUpdate(?,?,?)";
-    private String callDELETE_byId = "exec spDeleteById(?)";
+    private String callSELECT = "{call spSelectAll}";
+    private String callSELECT_byId = "{call spSelectById(?)}";
+    private String callSELECT_byName = "{call spSelectByName(?)}";
+    private String callINSERT = "{call spInsert(?,?,?)}";
+    private String callUPDATE = "{call spUpdate(?,?,?)}";
+    private String callDELETE_byId = "{call spDeleteById(?)}";
 
     // Cách viết này chỉ để test nhanh, VI PHẠM QUY ĐỊNH MÔ HÌNH MVC
     public void checkDepartmentDAO() {
         try {
-            String sql = stmSELECT;
-            ResultSet resultSet = JdbcV1.executeQuery(sql);
+            ResultSet resultSet = JdbcV3.executeQuery(callSELECT);
             while (resultSet.next()) {
                 // Phần lấy dữ liệu (M)
                 String maPhong = resultSet.getString("Id");
@@ -64,9 +63,7 @@ public class DepartmentDAO {
         List<Department> list = new ArrayList<>();
         try {
             // Gọi hàm truy vấn
-//            ResultSet resultSet = JdbcV1.executeQuery(stmSELECT);
-            ResultSet resultSet = JdbcV2.executeQuery(stmSELECT);
-//            ResultSet resultSet = JdbcV3.executeQuery(callSELECT);
+            ResultSet resultSet = JdbcV3.executeQuery(callSELECT);
             while (resultSet.next()) {
                 Department dept = new Department();
                 dept.setId(resultSet.getString("Id"));
@@ -84,13 +81,12 @@ public class DepartmentDAO {
     }
 
     public Department findById(String id) {
-        Department dept = new Department();
+        Department dept = null;
         try {
             // Gọi hàm truy vấn
-//            ResultSet resultSet = JdbcV1.executeQuery(stmSELECT);
-            ResultSet resultSet = JdbcV2.executeQuery(stmSELECT_byId, id);
-//            ResultSet resultSet = JdbcV3.executeQuery(callSELECT_byId, id);
+            ResultSet resultSet = JdbcV3.executeQuery(callSELECT_byId, id);
             if (resultSet.next()) {
+                dept = new Department();
                 dept.setId(resultSet.getString("Id"));
                 dept.setName(resultSet.getString("Name"));
                 dept.setDescription(resultSet.getString("Description"));
@@ -107,7 +103,7 @@ public class DepartmentDAO {
         List<Department> list = new ArrayList<>();
         try {
             // Gọi hàm truy vấn
-            ResultSet resultSet = JdbcV2.executeQuery(stmSELECT_byName, '%' + name + '%');
+            ResultSet resultSet = JdbcV3.executeQuery(callSELECT_byName, "%" + name + "%");
             while (resultSet.next()) {
                 Department dept = new Department();
                 dept.setId(resultSet.getString("Id"));
@@ -115,7 +111,7 @@ public class DepartmentDAO {
                 dept.setDescription(resultSet.getString("Description"));
                 list.add(dept);
             }
-            resultSet.close();
+            resultSet.getStatement().getConnection().close();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -160,7 +156,7 @@ public class DepartmentDAO {
     public List<Department> getAll() {
         List<Department> list = new ArrayList<>();
         // Java sẽ tự động đóng toàn bộ các tài nguyên khai báo trong ngoặc tròn này
-        try (java.sql.Connection conn = JdbcV3.getConnection();
+        try (java.sql.Connection conn = util.JdbcV3.getConnection();
              java.sql.PreparedStatement stmt = conn.prepareStatement(callSELECT);
              ResultSet resultSet = stmt.executeQuery()) {
 
