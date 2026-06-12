@@ -11,9 +11,10 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
 
-// Hứng toàn bộ các đầu URL bắt đầu bằng /departments hoặc /department/id/{x} hoặc /department/name/{x}
-@WebServlet(urlPatterns = {"/departments", "/department/*"})
-public class testServlet extends HttpServlet {
+@WebServlet("/department")
+public class DepartmentServlet extends HttpServlet {
+
+    private final DepartmentDAO deptDAO = new DepartmentDAO();
 
     @Override
     protected void doGet(
@@ -21,25 +22,22 @@ public class testServlet extends HttpServlet {
             HttpServletResponse response)
             throws ServletException, IOException {
 
-        DepartmentDAO deptDAO = new DepartmentDAO();
-
-        // Kiểm tra kết nối
-        deptDAO.checkDepartmentDAO();
-
-        // Lấy danh sách phòng ban
+        // JDBC V3 - findAll()
         List<Department> list = deptDAO.findAll();
 
-        // In ra Console giống hình mẫu
+        // Kiểm tra dữ liệu Console
+        System.out.println("===== FIND ALL =====");
         for (Department d : list) {
             System.out.println(d.getId());
             System.out.println(d.getName());
             System.out.println(d.getDescription());
-            System.out.println("---------------------");
+            System.out.println("------------------");
         }
 
-        response.setContentType("text/html;charset=UTF-8");
-        response.getWriter().println("Test DepartmentDAO Success!");
+        request.setAttribute("departments", list);
+
+        request.getRequestDispatcher("/view_dept/department-list.jsp")
+                .forward(request, response);
     }
 }
-
 
